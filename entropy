@@ -1,0 +1,147 @@
+import numpy as np
+import scipy.sparse as sp
+import torch
+import random
+import math
+import networkx as nx
+import pandas as pd
+from scipy.spatial import distance
+
+data_dir = './data/shuju/acm/'
+outfilename1 = data_dir + 'entropy_apa.csv'
+outfilename2 = data_dir + 'entropy_aca.csv'
+outfilename3 = data_dir + 'entropy_apca.csv'
+outfilename4 = data_dir + 'entropy_apcpa.csv'
+outfilename = data_dir + 'entropy_cs_nei_weight.csv'
+filename1 = data_dir + 'subgraph_apa_.txt'
+data1 = pd.read_csv(filename1, sep=' ', header=None)
+data1 = np.array(data1)
+G1 = nx.Graph()
+G1.add_edges_from(data1)
+
+filename2 = data_dir + 'subgraph_aca_.txt'
+G2 = nx.Graph()
+data2 = pd.read_csv(filename2, sep=' ', header=None)
+data2 = np.array(data2)
+G2.add_edges_from(data2)
+
+filename3 = data_dir + 'subgraph_apca_.txt'
+data3 = pd.read_csv(filename3, sep=' ', header=None)
+data3 = np.array(data3)
+G3 = nx.Graph()
+G3.add_edges_from(data3)
+
+filename4 = data_dir + 'subgraph_apcpa_.txt'
+data4 = pd.read_csv(filename4, sep=' ', header=None)
+data4 = np.array(data4)
+G4 = nx.Graph()
+G4.add_edges_from(data4)
+
+entropy1 = {}
+with open(outfilename1, 'r', encoding='utf-8') as f:
+    for idx, line in enumerate(f):
+        items = line.strip().split(',')
+        entropy1[items[0]] = float(items[1])
+f.close()
+
+entropy2 = {}
+with open(outfilename2, 'r', encoding='utf-8') as f:
+    for idx, line in enumerate(f):
+        items = line.strip().split(',')
+        entropy2[items[0]] = float(items[1])
+f.close()
+
+entropy3 = {}
+with open(outfilename3, 'r', encoding='utf-8') as f:
+    for idx, line in enumerate(f):
+        items = line.strip().split(',')
+        entropy3[items[0]] = float(items[1])
+f.close()
+
+entropy4 = {}
+with open(outfilename4, 'r', encoding='utf-8') as f:
+    for idx, line in enumerate(f):
+        items = line.strip().split(',')
+        entropy4[items[0]] = float(items[1])
+f.close()
+
+"""
+for k, v in entropy2.items():
+    if k in entropy1:
+        entropy1[k] += v
+    else:
+        entropy1[k] = v
+
+for k, v in entropy3.items():
+    if k in entropy1:
+        entropy1[k] += v
+    else:
+        entropy1[k] = v
+
+for k, v in entropy4.items():
+    if k in entropy1:
+        entropy1[k] += v
+    else:
+        entropy1[k] = v
+final_entropy = dict(sorted(entropy1.items(), key=lambda d: d[1]))
+"""
+
+entropy = {}
+for k, v in entropy1.items():
+    p = G1.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k])
+    entropy[k] = v * p
+
+for k, v in entropy2.items():
+    p = G2.degree[k] / (G1.degree[k] + G2.degree[k] + G3.degree[k] + G4.degree[k])
+    if k in entropy:
+        entropy[k] += v * p
+    else:
+        entropy[k] = v * p
+
+for k, v in entropy3.items():
+    p = G3.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k])
+    if k in entropy:
+        entropy[k] += v * p
+    else:
+        entropy[k] = v * p
+
+for k, v in entropy4.items():
+    p = G4.degree[k] / (G1.degree[k] + G2.degree[k] + G3.degree[k] + G4.degree[k])
+    if k in entropy:
+        entropy[k] += v * p
+    else:
+        entropy[k] = v * p
+final_entropy = dict(sorted(entropy.items(), key=lambda d: d[1], reverse=True))
+"""
+entropy = {}
+for k, v in entropy1.items():
+    entropy[k] = v * 0.5
+
+for k, v in entropy2.items():
+    if k in entropy:
+        entropy[k] += v * 0.5 * 0.5
+    else:
+        entropy[k] = v * 0.5 * 0.5
+
+for k, v in entropy3.items():
+    if k in entropy:
+        entropy[k] += v * 0.5 * 0.5
+    else:
+        entropy[k] = v * 0.5 * 0.5
+
+for k, v in entropy4.items():
+    if k in entropy:
+        entropy[k] += v * 0.5 * 0.5 * 0.5
+    else:
+        entropy[k] = v * 0.5 * 0.5 * 0.5
+final_entropy = dict(sorted(entropy.items(), key=lambda d: d[1], reverse=True))
+"""
+ff = open(outfilename, 'w')
+for kk, vv in final_entropy.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+
+ff.close()
+
