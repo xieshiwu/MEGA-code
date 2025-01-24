@@ -1,0 +1,357 @@
+import numpy as np
+import scipy.sparse as sp
+import torch
+import random
+import math
+import networkx as nx
+import pandas as pd
+from scipy.spatial import distance
+
+def data_processing(f1, f2):
+    f1_dict = {}
+    f2_dict = {}
+    with open(f1, 'r', encoding='utf-8') as f:
+        for idx, line in enumerate(f):
+            items = line.strip().split(' ')
+            f1_dict[items[0]] = [float(items[s]) for s in range(1, len(items))]
+    f.close()
+    with open(f2, 'r', encoding='utf-8') as f:
+        for idx, line in enumerate(f):
+            items = line.strip().split(' ')
+            if idx != 0:
+                f2_dict[items[-1]] = [float(items[s]) for s in range(0, len(items)-1)]
+    f.close()
+    for k, v in f1_dict.items():
+        if k in f2_dict:
+            for i in range(len(f2_dict[k])):
+                f1_dict[k].append(float(f2_dict[k][i]))
+    return f1_dict
+
+
+def cal_entropy_neibor(file1, file2, G):
+    nodes_entropy = {}
+    feat_dict = {}
+    dis = {}
+    # feat_dict = data_processing(file1, file2)
+    with open(file2, 'r', encoding='utf-8') as f:
+        for idx, line in enumerate(f):
+            items = line.strip().split(' ')
+            if idx != 0:
+                if items[-1][0] == 'a':
+                    feat_dict[items[-1]] = [float(items[s]) for s in range(0, len(items)-1)]
+    f.close()
+    nodes = list(feat_dict.keys())
+    for node in nodes:
+        dis[node] = {}
+    for node in nodes:
+        node_emb = feat_dict[node]
+        dist = 0.0
+        sum_entr = 0.0
+        for node_n in G[node]:
+            if node != node_n:
+                if node_n not in dis[node]:
+                    node_n_emb = feat_dict[node_n]
+                    dist = 1 - distance.cosine(node_emb, node_n_emb)
+                    #dist = distance.euclidean(node_emb, node_n_emb)
+                    #p = math.exp(dist)
+                    p = (dist + 1) / 2
+                    #p = p * G.degree[node_n]
+                    #p = dist
+                    #p = - p * math.log10(p)
+                    print("=====")
+                    print(p)
+                    dis[node][node_n] = p
+                    dis[node_n][node] = p
+                    sum_entr += p
+                else:
+                    p = dis[node][node_n]
+                    sum_entr += p
+        nodes_entropy[node] = sum_entr
+
+    sum_node_degree = {}
+    for node in nodes:
+        node_degree = 0.0
+        for node_n in G[node]:
+            if node != node_n:
+                node_degree += 1
+        sum_node_degree[node] = node_degree
+    nor_dis = {}
+    for node in nodes:
+        nor_sum_dis = 0.0
+        degree_node = 0.0
+        for node_n in G[node]:
+            if node != node_n:
+                #x = dis[node][node_n] / nodes_entropy[node_n]
+                #x = dis[node][node_n] / nodes_entropy[node]
+                x = dis[node][node_n]
+                x1 = - x * math.log2(x)
+                nor_sum_dis += x1
+                degree_node += sum_node_degree[node_n]
+        if nor_sum_dis == 0.0:
+            nor_dis[node] = nor_sum_dis
+        else:
+            #nor_dis[node] = nor_sum_dis / len(G[node])
+            #nor_dis[node] = nor_sum_dis * degree_node / sum_node_degree[node]
+            nor_dis[node] = nor_sum_dis / sum_node_degree[node]
+        #nor_dis[node] = nor_sum_dis
+    return nodes_entropy, nor_dis
+
+def cal_entropy_neibor1(file1, file2):
+    nodes_entropy = {}
+    feat_dict = {}
+    dis = {}
+    feat_dict = data_processing(file1, file2)
+    feat_dict1 = {}
+    for k, v in feat_dict.items():
+        if k[0] == 'a':
+            feat_dict1[k] = feat_dict[k]
+    """
+    with open(file2, 'r', encoding='utf-8') as f:
+        for idx, line in enumerate(f):
+            items = line.strip().split(' ')
+            if idx != 0:
+                if items[-1][0] == 'a':
+                    feat_dict[items[-1]] = [float(items[s]) for s in range(0, len(items)-1)]
+    f.close()
+    """
+    nodes = list(feat_dict1.keys())
+    for node in nodes:
+        dis[node] = {}
+    for node in nodes:
+        node_emb = feat_dict[node]
+        dist = 0.0
+        sum_entr = 0.0
+        for node_n in nodes:
+            if node != node_n:
+                if node_n not in dis[node]:
+                    node_n_emb = feat_dict[node_n]
+                    dist = 1 - distance.cosine(node_emb, node_n_emb)
+                    p = math.exp(dist)
+                    dis[node][node_n] = p
+                    dis[node_n][node] = p
+                    sum_entr += p
+                else:
+                    p = dis[node][node_n]
+                    sum_entr += p
+        nodes_entropy[node] = sum_entr
+    return nodes_entropy
+
+
+data_dir = './data/shuju/dblp_/'
+outfilename1 = data_dir + 'entropy_apa_a12.csv'
+outfilename2 = data_dir + 'entropy_aca_a12.csv'
+outfilename3 = data_dir + 'entropy_apca_a12.csv'
+outfilename4 = data_dir + 'entropy_apcpa_a12.csv'
+outfilename = data_dir + 'entropy_cs_nei_weight1.csv'
+outfilename5 = data_dir + 'entropy_cs_nei_weight1_nor.csv'
+outfilename11 = data_dir + 'entropy_apa_a22.csv'
+outfilename22 = data_dir + 'entropy_aca_a22.csv'
+outfilename33 = data_dir + 'entropy_apca_a22.csv'
+outfilename44 = data_dir + 'entropy_apcpa_a22.csv'
+filename1 = data_dir + 'subgraph_apa_.txt'
+data1 = pd.read_csv(filename1, sep=' ', header=None)
+data1 = np.array(data1)
+G1 = nx.Graph()
+G1.add_edges_from(data1)
+
+filename2 = data_dir + 'subgraph_aca_.txt'
+G2 = nx.Graph()
+data2 = pd.read_csv(filename2, sep=' ', header=None)
+data2 = np.array(data2)
+G2.add_edges_from(data2)
+
+filename3 = data_dir + 'subgraph_apca_.txt'
+data3 = pd.read_csv(filename3, sep=' ', header=None)
+data3 = np.array(data3)
+G3 = nx.Graph()
+G3.add_edges_from(data3)
+
+filename4 = data_dir + 'subgraph_apcpa_.txt'
+data4 = pd.read_csv(filename4, sep=' ', header=None)
+data4 = np.array(data4)
+G4 = nx.Graph()
+G4.add_edges_from(data4)
+
+f1 = data_dir + 'apa_GAT_a.txt'
+f11 = data_dir + 'apa_embedding_a.txt'
+entropy1, entropy11 = cal_entropy_neibor(f11, f1, G1)
+
+ff = open(outfilename1, 'w')
+for kk, vv in entropy1.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+ff = open(outfilename11, 'w')
+for kk, vv in entropy11.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+
+f2 = data_dir + 'aca_GAT_a.txt'
+f22 = data_dir + 'aca_embedding_a.txt'
+entropy2, entropy22 = cal_entropy_neibor(f22, f2, G2)
+
+ff = open(outfilename2, 'w')
+for kk, vv in entropy2.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+ff = open(outfilename22, 'w')
+for kk, vv in entropy22.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+
+f3 = data_dir + 'apca_GAT_a.txt'
+f33 = data_dir + 'apca_embedding_a.txt'
+entropy3, entropy33 = cal_entropy_neibor(f33, f3, G3)
+
+ff = open(outfilename3, 'w')
+for kk, vv in entropy3.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+ff = open(outfilename33, 'w')
+for kk, vv in entropy33.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+
+f4 = data_dir + 'apcpa_GAT_a.txt'
+f44 = data_dir + 'apcpa_embedding_a.txt'
+entropy4, entropy44 = cal_entropy_neibor(f44, f4, G4)
+
+ff = open(outfilename4, 'w')
+for kk, vv in entropy4.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+ff = open(outfilename44, 'w')
+for kk, vv in entropy44.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+
+entropy = {}
+for k, v in entropy1.items():
+    entropy[k] = v
+
+for k, v in entropy2.items():
+    if k in entropy:
+        entropy[k] += v
+    else:
+        entropy[k] = v
+
+for k, v in entropy3.items():
+    if k in entropy:
+        entropy[k] += v
+    else:
+        entropy[k] = v
+
+for k, v in entropy4.items():
+    if k in entropy:
+        entropy[k] += v
+    else:
+        entropy[k] = v
+final_entropy = dict(sorted(entropy.items(), key=lambda d: d[1], reverse=True))
+
+entropy_ = {}
+for k, v in entropy11.items():
+    entropy_[k] = v
+
+for k, v in entropy22.items():
+    if k in entropy_:
+        entropy_[k] += v
+    else:
+        entropy_[k] = v
+
+for k, v in entropy33.items():
+    if k in entropy_:
+        entropy_[k] += v
+    else:
+        entropy_[k] = v
+
+for k, v in entropy44.items():
+    if k in entropy_:
+        entropy_[k] += v
+    else:
+        entropy_[k] = v
+final_entropy1 = dict(sorted(entropy_.items(), key=lambda d: d[1], reverse=True))
+"""
+entropy = {}
+for k, v in entropy1.items():
+    entropy[k] = v * (G1.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+
+for k, v in entropy2.items():
+    if k in entropy:
+        entropy[k] += v * (G2.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+    else:
+        entropy[k] = v * (G2.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+
+for k, v in entropy3.items():
+    if k in entropy:
+        entropy[k] += v * (G3.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+    else:
+        entropy[k] = v * (G3.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+
+for k, v in entropy4.items():
+    if k in entropy:
+        entropy[k] += v * (G4.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+    else:
+        entropy[k] = v * (G4.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+final_entropy = dict(sorted(entropy.items(), key=lambda d: d[1], reverse=True))
+
+entropy_ = {}
+for k, v in entropy11.items():
+    entropy_[k] = v * (G1.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+
+for k, v in entropy22.items():
+    if k in entropy_:
+        entropy_[k] += v * (G2.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+    else:
+        entropy_[k] = v * (G2.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+
+for k, v in entropy33.items():
+    if k in entropy_:
+        entropy_[k] += v * (G3.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+    else:
+        entropy_[k] = v * (G3.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+
+for k, v in entropy44.items():
+    if k in entropy_:
+        entropy_[k] += v * (G4.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+    else:
+        entropy_[k] = v * (G4.degree[k]/(G1.degree[k]+ G2.degree[k] + G3.degree[k] +G4.degree[k]))
+final_entropy1 = dict(sorted(entropy_.items(), key=lambda d: d[1], reverse=True))
+"""
+ff = open(outfilename, 'w')
+for kk, vv in final_entropy.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
+
+ff = open(outfilename5, 'w')
+for kk, vv in final_entropy1.items():
+    ff.writelines(kk)
+    ff.writelines(',')
+    ff.writelines(str(vv))
+    ff.writelines('\n')
+ff.close()
