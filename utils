@@ -1,0 +1,87 @@
+import numpy as np
+import scipy.sparse as sp
+import torch
+import pandas as pd
+
+def encode_onehot(labels):
+    # The classes must be sorted before encoding to enable static class encoding.
+    # In other words, make sure the first class always maps to index 0.
+    classes = sorted(list(set(labels)))
+    classes_dict = {c: np.identity(len(classes))[i, :] for i, c in enumerate(classes)}
+    labels_onehot = np.array(list(map(classes_dict.get, labels)), dtype=np.int32)
+    return labels_onehot
+
+
+def load_data(filepath, subgraph):
+    """Load citation network dataset (cora only for now)"""
+    data = pd.read_csv(filepath, sep=' ', header=None)
+    features1 = np.array(data.iloc[:, 1:-2])
+    features = sp.csr_matrix(features1, dtype=np.float64)
+    labels = data[0].tolist()
+    idx = np.array(data.iloc[:, 0])
+    idx_map = {j: i for i, j in enumerate(idx)}
+    edge_list = []
+    node_set = set()  # 集合的特性就是元素不会重复，互异的
+    with open(subgraph, 'r') as f:
+        for line in f:
+            cols = line.strip().split(' ')
+            y1 = cols[0]
+            y2 = cols[1]
+            node_set.add(y1)
+            node_set.add(y2)
+            edge = (y1, y2)  # 元组代表一条边
+            edge_list.append(edge)
+    edge_node = np.array(edge_list)
+    # adj = np.array(adj, dtype=np.float64)
+    # adj = adj.astype(np.float32) 不用修改精度
+    edges = np.array(list(map(idx_map.get, edge_node.flatten())), dtype=np.int32).reshape(edge_node.shape)  # 将边做映射为0开始的节点序列
+    adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(len(labels), len(labels)), dtype=np.float64)
+    # adj=sp.coo_matrix(adj, dtype=np.float64)
+    # build symmetric adjacency matrix
+    adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
+    features = normalize_features(features)
+    adj = normalize_adj(adj + sp.eye(adj.shape[0]))
+    diag_node = adj.diagonal()    # 提取稀疏矩阵主对角元素
+    '''
+    from sklearn import model_selection
+    # 将数据集拆分为训练集和测试集
+    l = range(labels.shape[0])
+    idx_train, idx_test = model_selection.train_test_split(l, test_size=0.2, random_state=1234)
+    idx_test, idx_val = model_selection.train_test_split(idx_test, test_size=0.2, random_state=1234)
+    print(len(idx_train))
+    print(len(idx_test))
+    print(len(idx_val))
+    '''
+    adj = torch.FloatTensor(np.diag(diag_node))
+    features = torch.FloatTensor(np.array(features.todense()))
+    # labels = torch.LongTensor(l)
+    # idx_train = torch.LongTensor(idx_train)
+    # idx_val = torch.LongTensor(idx_val)
+    # idx_test = torch.LongTensor(idx_test)
+    # return adj, features, labels, idx_train, idx_val, idx_test
+    return adj, features, labels
+
+def normalize_adj(mx):
+    """Row-normalize sparse matrix"""
+    rowsum = np.array(mx.sum(1))
+    r_inv_sqrt = np.power(rowsum, -0.5).flatten()
+    r_inv_sqrt[np.isinf(r_inv_sqrt)] = 0.
+    r_mat_inv_sqrt = sp.diags(r_inv_sqrt)
+    return mx.dot(r_mat_inv_sqrt).transpose().dot(r_mat_inv_sqrt)
+
+def normalize_features(mx):
+    """Row-normalize sparse matrix"""
+    rowsum = np.array(mx.sum(1))
+    r_inv = np.power(rowsum, -1).flatten()
+    r_inv[np.isinf(r_inv)] = 0.
+    r_mat_inv = sp.diags(r_inv)
+    mx = r_mat_inv.dot(mx)
+    return mx
+
+if __name__ == '__main__':
+    filename = '../data/output/aaa_embedding_sort.txt'
+    outputfile = '../data/output/subgraph_aaa_sort.txt'
+    adj, fea, la = load_data(filename, outputfile)
+
+
+
