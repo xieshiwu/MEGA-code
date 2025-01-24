@@ -1,0 +1,289 @@
+
+def generate_subgraph(filename, outfilename, type):
+    subgraph_aaa = []
+    subgraph_aca = []
+    subgraph_apa = []
+    subgraph_aaaa = []
+    subgraph_acaa = []
+    subgraph_apaa = []
+    subgraph_apca = []
+    subgraph_aaaaa = []
+    subgraph_acaca = []
+    subgraph_apapa = []
+    subgraph_apcpa = []
+    subgraph_apaca = []
+
+    fr = open(filename, 'r')
+    all_lines = fr.readlines()
+    for line in all_lines:
+        ss = line.strip().split(' ')
+        if len(ss)==3 :
+            if type=='aaa':
+                subgraph_aaa.append([ss[0], ss[1]])
+                subgraph_aaa.append([ss[1], ss[2]])
+
+            if type =='aca':
+                subgraph_aca.append([ss[0], ss[2]])
+            if type =='apa':
+                subgraph_apa.append([ss[0], ss[2]])
+            """
+            if type =='ada':
+                subgraph_aca.append([ss[0], ss[2]])
+            if type =='ama':
+                subgraph_apa.append([ss[0], ss[2]])
+            """
+        if len(ss)==4:
+            if type =='aaaa':
+                subgraph_aaaa.append([ss[0], ss[1]])
+                subgraph_aaaa.append([ss[1], ss[2]])
+                subgraph_aaaa.append([ss[2], ss[3]])
+            if type =='acaa':
+                subgraph_acaa.append([ss[0], ss[2]])
+                subgraph_acaa.append([ss[2], ss[3]])
+            if type =='apaa':
+                subgraph_apaa.append([ss[0], ss[2]])
+                subgraph_apaa.append([ss[2], ss[3]])
+
+            if type =='apca':
+                subgraph_apca.append([ss[0], ss[3]])
+            """
+            if type =='amda':
+                subgraph_apca.append([ss[0], ss[3]])
+            """
+        if len(ss)==5:
+            if type =='aaaaa':
+                subgraph_aaaaa.append([ss[0], ss[1]])
+                subgraph_aaaaa.append([ss[1], ss[2]])
+                subgraph_aaaaa.append([ss[2], ss[3]])
+                subgraph_aaaaa.append([ss[3], ss[4]])
+            if type =='acaca':
+                subgraph_acaca.append([ss[0], ss[2]])
+                subgraph_acaca.append([ss[2], ss[4]])
+            if type =='apapa':
+                subgraph_apapa.append([ss[0], ss[2]])
+                subgraph_apapa.append([ss[2], ss[4]])
+
+            if type =='apcpa':
+                subgraph_apcpa.append([ss[0], ss[4]])
+            """
+            if type == 'amdma':
+                subgraph_apcpa.append([ss[0], ss[4]])
+            """
+            if type =='apaca':
+                subgraph_apaca.append([ss[0], ss[2]])
+                subgraph_apaca.append([ss[2], ss[4]])
+    fr.close()
+    with open(outfilename, 'w') as ff:
+        if type=='aaa':
+            for l in subgraph_aaa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+
+        if type=='aca':
+            for l in subgraph_aca:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        if type=='apa':
+            for l in subgraph_apa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        """
+        if type == 'ada':
+            for l in subgraph_aca:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        if type == 'ama':
+            for l in subgraph_apa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        """
+        if type=='aaaa':
+            for l in subgraph_aaaa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        if type=='acaa':
+            for l in subgraph_acaa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        if type=='apaa':
+            for l in subgraph_apaa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+
+        if type=='apca':
+            for l in subgraph_apca:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        """
+        if type=='amda':
+            for l in subgraph_apca:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        """
+        if type=='aaaaa':
+            for l in subgraph_aaaaa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        if type=='acaca':
+            for l in subgraph_acaca:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        if type=='apapa':
+            for l in subgraph_apapa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+
+        if type=='apcpa':
+            for l in subgraph_apcpa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        """
+        if type=='amdma':
+            for l in subgraph_apcpa:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+        """
+        if type=='apaca':
+            for l in subgraph_apaca:
+                ff.writelines(l[0])
+                ff.writelines(' ')
+                ff.writelines(l[1])
+                ff.writelines('\n')
+    ff.close()
+
+    def subgraph(filename2, outfilename):
+        edge = []
+        ff = open(outfilename, 'w')
+        with open(filename2, 'r', encoding='utf-8') as f:
+            for x, line in enumerate(f):
+                items = line.strip().split(' ')
+                start = items[0]
+                end = items[1]
+                if (start, end) not in edge:
+                    edge.append((start, end))
+                    edge.append((end, start))
+                    ff.writelines(start)
+                    ff.writelines(' ')
+                    ff.writelines(end)
+                    ff.writelines('\n')
+        f.close()
+        ff.close()
+
+def subgraph(filename2, outfilename):
+    edge = []
+    ff = open(outfilename, 'w')
+    with open(filename2, 'r', encoding='utf-8') as f:
+        for x, line in enumerate(f):
+            items = line.strip().split(' ')
+            start = items[0]
+            end = items[1]
+            if (start, end) not in edge:
+                edge.append((start, end))
+                edge.append((end, start))
+                ff.writelines(start)
+                ff.writelines(' ')
+                ff.writelines(end)
+                ff.writelines('\n')
+    f.close()
+    ff.close()
+
+
+if __name__ == '__main__':
+    data_dir = './data/shuju/dblp_/'
+    types = ['aaa', 'aaaa', 'aaaaa', 'aca', 'acaa', 'acaca', 'apa', 'apaa', 'apca', 'apaca', 'apapa', 'apcpa']
+    #types = ['aaa', 'aaaa', 'aaaaa', 'ada', 'acaa', 'acaca', 'ama', 'apaa', 'amda', 'apaca', 'apapa', 'amdma']
+    
+    filename3 = data_dir + 'aca.txt'
+    outputfile3 = data_dir + 'subgraph_aca.txt'
+    outputfile33 = data_dir + 'subgraph_aca_.txt'
+    generate_subgraph(filename3, outputfile3, types[3])
+    subgraph(outputfile3, outputfile33)
+
+    filename6 = data_dir + 'apa.txt'
+    outputfile6 = data_dir + 'subgraph_apa.txt'
+    outputfile66 = data_dir + 'subgraph_apa_.txt'
+    generate_subgraph(filename6, outputfile6, types[6])
+    subgraph(outputfile6, outputfile66)
+
+    filename8 = data_dir + 'apca.txt'
+    outputfile8 = data_dir + 'subgraph_apca.txt'
+    outputfile88 = data_dir + 'subgraph_apca_.txt'
+    generate_subgraph(filename8, outputfile8, types[8])
+    subgraph(outputfile8, outputfile88)
+
+    filename11 = data_dir + 'apcpa.txt'
+    outputfile11 = data_dir + 'subgraph_apcpa.txt'
+    outputfile111 = data_dir + 'subgraph_apcpa_.txt'
+    generate_subgraph(filename11, outputfile11, types[11])
+    subgraph(outputfile11, outputfile111)
+    """
+    filename = data_dir + 'aaa.txt'
+    outputfile = data_dir + 'subgraph_aaa.txt'
+    generate_subgraph(filename, outputfile, types[0])
+
+    filename1 = data_dir + 'aaaa.txt'
+    outputfile1 = data_dir + 'subgraph_aaaa.txt'
+    generate_subgraph(filename1, outputfile1, types[1])
+
+    filename2 = data_dir + 'aaaaa.txt'
+    outputfile2 = data_dir + 'subgraph_aaaaa.txt'
+    generate_subgraph(filename2, outputfile2, types[2])
+
+    filename4 = data_dir + 'acaa.txt'
+    outputfile4 = data_dir + 'subgraph_acaa.txt'
+    generate_subgraph(filename4, outputfile4, types[4])
+
+    filename5 = data_dir + 'acaca.txt'
+    outputfile5 = data_dir + 'subgraph_acaca.txt'
+    generate_subgraph(filename5, outputfile5, types[5])
+    
+    filename7 = data_dir + 'apaa.txt'
+    outputfile7 = data_dir + 'subgraph_apaa.txt'
+    generate_subgraph(filename7, outputfile7, types[7])
+    
+    filename9 = data_dir + 'apaca.txt'
+    outputfile9 = data_dir + 'subgraph_apaca.txt'
+    generate_subgraph(filename9, outputfile9, types[9])
+    
+    filename10 = data_dir + 'apapa.txt'
+    outputfile10 = data_dir + 'subgraph_apapa.txt'
+    generate_subgraph(filename10, outputfile10, types[10])
+    """
+
+
+
+
+
+
+
+
